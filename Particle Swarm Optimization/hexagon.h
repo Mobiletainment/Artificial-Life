@@ -48,7 +48,7 @@ public:
 	{
 		_coord_x = x;
 		_coord_y = y;
-		
+
 	}
 
 	void setPosition( float x, float y ) 
@@ -67,8 +67,9 @@ public:
 	{
 		glBegin(GL_POLYGON);
 		glColor3f(_color.x,_color.y,_color.z);
-		for (int i = 0; i <= 6; i++) {
-			_angle = 2 * PI / 6 * (i + 0.5);
+		for (int i = 0; i <= 6; i++) 
+		{
+			_angle = 2 * PI / 6 * (i + 0.5); //In a regular hexagon the interior angles are 120°. There are six wedges, each an equilateral triangle with 60° angles inside
 			_x_i = _x + _size * cos(_angle);
 			_y_i = _y + _size * sin(_angle);
 			glVertex3f(_x_i, _y_i, 0.0f);		

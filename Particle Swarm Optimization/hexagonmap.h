@@ -82,7 +82,7 @@ public:
 
 	void render( float deltaTime )
 	{
-		
+
 		glPushMatrix();
 		glTranslatef(20.0f,20.0f,0.0f);
 		for(int x = 0; x < _columns;x++) 
@@ -96,7 +96,7 @@ public:
 
 		glBegin(GL_POINTS);
 		glColor3f(1.0f,0.0f,0.0f);
-			glVertex3f(mouseX,HEIGHT-mouseY,0.0f);
+		glVertex3f(mouseX,HEIGHT-mouseY,0.0f);
 		glEnd();
 	}
 

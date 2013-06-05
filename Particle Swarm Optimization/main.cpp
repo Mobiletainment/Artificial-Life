@@ -36,9 +36,9 @@ int main( void )
 	glOrtho(0,  WIDTH,0, HEIGHT, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
+
 	glfwSwapInterval(1);
-	
+
 	//Swarm _gf(WIDTH,HEIGHT);
 	//_gf.init();
 
@@ -59,7 +59,7 @@ int main( void )
 		float deltaTime = (currentTime - lastTime) / 1000.0f;
 		lastTime = currentTime;
 
-		
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		hexmap.updateMousePos();
