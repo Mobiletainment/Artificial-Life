@@ -1,3 +1,5 @@
+//See: http://www.redblobgames.com/grids/hexagons/
+
 #pragma once
 #ifndef HEXAGON_H
 #define HEXAGON_H

@@ -45,6 +45,7 @@ public:
 		srand ( 5 );
 	}
 
+
 	void initialize( int columns, int rows, float size, int width, int height) 
 	{
 		WIDTH = width;
@@ -75,7 +76,7 @@ public:
 				}
 				_hexagonmap[x][y].initialize(x,y,_hex_size,_hex_width,_hex_height,_hex_horiz,_hex_vert);
 				_hexagonmap[x][y].setColor(color);
-				_hexagonmap[x][y].setGridPosition(x,y);
+				//_hexagonmap[x][y].setGridPosition(x,y); //already done during initialization
 			}
 		}
 	}
@@ -126,12 +127,11 @@ public:
 	{
 		if(key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
 		{
-			std::cout << mouseX << "||" << HEIGHT-mouseY << std::endl;
 			float mx = mouseX-20;
 			float my = (HEIGHT-mouseY)-20;
-			int q = (1/3.0f*sqrt(3.0f) * mx - 1/3 * my) / 10.0f;
+			int q = (1.0f/3.0f*sqrt(3.0f) * mx - 1/3 * my) / 10.0f;
 			int r = 2/3.0f *  my / 10.0f;
-			std::cout << q << "||" << r << std::endl;
+			std::cout << "Tile: " << q << "," << r << "\tMousePos: " << mouseX << ", " << HEIGHT-mouseY << std::endl;
 
 		}
 		if(key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) 

@@ -12,6 +12,7 @@ static const int WIDTH = 1000;
 static const int HEIGHT = 780;
 
 #define PI 3.141592f
+#define SIZE 10
 
 int main( void )
 {
@@ -45,7 +46,7 @@ int main( void )
 	glfwSetMouseButtonCallback( &HexagonMap::mouse);
 
 	HexagonMap hexmap;
-	hexmap.initialize(48,43,10,WIDTH,HEIGHT);
+	hexmap.initialize(48,43,SIZE,WIDTH,HEIGHT);
 
 	Timer t;
 	t.start();
