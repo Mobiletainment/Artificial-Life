@@ -9,19 +9,15 @@ public:
 	glm::vec3 _position;		//Current Position
 	glm::vec3 _velocity;		//Current Velocity
 	glm::vec3 _accForce;		//Current accumulated Force
-	glm::vec3 _acceleration;	//Current Acceleration
 	float _inverseMass;			//Inverse Mass of Particle
-	float _damping;				//Damping of Particle
-
+	
 	Particle()
 	{
 		_bestPosition	= glm::vec3(0);
 		_position		= glm::vec3(0);
-		_velocity		= glm::vec3(0);
-		_acceleration	= glm::vec3(0);
+		_velocity		= glm::vec3(1.0f, 0.0f, 0.0f);
 		_accForce		= glm::vec3(0);
 		_inverseMass	= 0.0;
-		_damping		= 0.0;
 	}
 
 	~Particle( void )
@@ -29,17 +25,17 @@ public:
 		//nothing to clean up
 	}
 
-	void integrate( float deltaTime ) 
+	void integrate(float deltaTime) 
 	{
 		// s = v*t
 		_position += _velocity * deltaTime; //ds = v*dt
 
 		// a = F/m    -->    a = F*(1/m)
 		// v = a * t
-		_velocity += _acceleration + (_accForce * _inverseMass) * deltaTime;
+		_velocity += (_accForce * _inverseMass) * deltaTime;
 		
 		// damping^dt
-		_velocity *= pow(_damping, deltaTime);
+		//_velocity *= pow(_damping, deltaTime);
 		_accForce = glm::vec3(0);
 	}
 

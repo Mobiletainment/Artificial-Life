@@ -41,8 +41,7 @@ int main( void )
 	swarm.Initialize(WIDTH,HEIGHT);
 	//_gf.init();
 
-	glfwSetMouseButtonCallback( &Swarm::mouse);
-
+	glfwSetMousePosCallback(&Swarm::updateMousePos);
 	Timer t;
 	t.start();
 	float currentTime = t.getElapsedTimeInMilliSec();
@@ -56,7 +55,6 @@ int main( void )
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		swarm.updateMousePos();
 		swarm.update(deltaTime);
 		swarm.render(deltaTime);
 		//_gf.swap();
