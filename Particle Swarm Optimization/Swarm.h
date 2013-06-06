@@ -6,6 +6,7 @@
 #include <ctime>
 #include <GL\glfw.h>
 #include <iostream>
+#include <algorithm> 
 #include "Particle.h"
 
 #define RADIUS 100
@@ -77,6 +78,21 @@ public:
 	void update(float deltaTime)
 	{
 		//1. determine best neighbour
+		//accelerate finding the best neighbour within radius by presorting based on their distance to the target
+		
+		for (iterator it = _particles.begin(); it != _particles.end(); ++it) //calculating distance to target
+		{
+			it->_distance = distanceOf(it->_position);
+		}
+
+		//sorting by distance to target
+		std::sort(_particles.begin(), _particles.end(), [](Particle one, Particle two) //avoid binding instance compare method and just use a lambda expression
+			{
+				return one._distance > two._distance;
+			}
+		);
+		
+
 		for(int i = 0; i<PARTICLES_COUNT; ++i)
 		{		
 			//Richtung zum best-positionierten Nachbar
@@ -88,8 +104,9 @@ public:
 					float distance = glm::length(_particles[j]._position - _particles[i]._position);
 					if(distance<RADIUS) //update the direction to the best neighbour
 					{
-						float distanceFromNeighbour = distanceOf(_particles[j]._position); //Bewertung des Nachbarn
-						if(distanceFromNeighbour < distanceOf(_particles[i]._bestNeighborPosition)) 
+						//Bewertung der besten Position mit Nachbar
+						float distanceFromNeighbour = _particles[j]._distance;
+						if(distanceFromNeighbour < _particles[i]._distance) 
 						{
 							_particles[i]._bestNeighborPosition = _particles[j]._position;
 						}
@@ -125,7 +142,7 @@ public:
 			it->_position = it->_position + it->_velocity * deltaTime; 
 
 			//Bewertung der neuen Position: ist neue Position besser als die bekannte Beste?
-			if(distanceOf(it->_position) < distanceOf(it->_bestPosition)) 
+			if(distanceOf(it->_position) < it->_distance) 
 			{
 				it->_bestPosition = it->_position;
 			}
