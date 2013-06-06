@@ -37,7 +37,8 @@ int main( void )
 	
 	glfwSwapInterval(1);
 	
-	Swarm swarm(WIDTH,HEIGHT);
+	Swarm &swarm = Swarm::getInstance();
+	swarm.Initialize(WIDTH,HEIGHT);
 	//_gf.init();
 
 	glfwSetMouseButtonCallback( &Swarm::mouse);

@@ -31,12 +31,26 @@ private:
 public:
 	static int mouseX;
 	static int mouseY;
+	glm::vec3 mousePosition;
 	int _width;
 	int _height;
 
-	
-	Swarm( int width, int height ) : _width(width), _height(height)
+	static Swarm& getInstance()
 	{
+		static Swarm instance; // Guaranteed to be destroyed & instantiated on first use
+		return instance;
+	}
+	
+	Swarm()
+	{
+
+	}
+
+	void Initialize( int width, int height )
+	{
+		this->_width = width;
+		this->_height = height;
+
 		srand((unsigned int)time(0));
 
 		for (int i = 0; i < NBR_PARTICLES; ++i)
@@ -66,7 +80,7 @@ public:
 	void update(float deltaTime)
 	{
 		glm::vec3 dirCurrent(0);
-		glm::vec3 mousePosition(mouseX,_height-mouseY,0);
+		
 		glm::vec3 dirBest(0);
 		glm::vec3 dirBestNeighbor(0);
 		glm::vec3 currentPosition(0);
@@ -138,6 +152,11 @@ public:
 		}
 	}
 
+	float fitnessOf(glm::vec3 position)
+	{
+		return glm::length(mousePosition - position);
+	}
+
 	void render( float deltaTime )
 	{
 		glBegin(GL_POINTS);
@@ -154,11 +173,20 @@ public:
 		glfwGetMousePos(&mouseX,&mouseY);
 	}
 
+
+
 	static void mouse( int key, int action )
+	{
+		getInstance().updateMousePosImpl(key, action);
+	}
+
+	void updateMousePosImpl(int key, int action)
 	{
 		if(key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
 		{
 			glfwGetMousePos(&mouseX,&mouseY);
+			mousePosition.x = mouseX;
+			mousePosition.y = _height-mouseY;
 		}
 		if(key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) 
 		{
