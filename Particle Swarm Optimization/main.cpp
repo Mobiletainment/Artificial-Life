@@ -57,13 +57,11 @@ int main( void )
 		
 		swarm.update(deltaTime);
 		swarm.render(deltaTime);
-		//_gf.swap();
 
 		// Swap front and back rendering buffers
 		glfwSwapBuffers();
 		// Check if ESC key was pressed or window was closed
-		running = !glfwGetKey( GLFW_KEY_ESC ) &&
-			glfwGetWindowParam( GLFW_OPENED );
+		running = !glfwGetKey( GLFW_KEY_ESC ) && glfwGetWindowParam( GLFW_OPENED );
 	}
 	// Close window and terminate GLFW
 	glfwTerminate();

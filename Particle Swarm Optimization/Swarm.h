@@ -8,9 +8,8 @@
 #include <iostream>
 #include "Particle.h"
 
-#define RADIUS 10
-#define NBR_PARTICLES 1000
-#define MAX_NEIGHBORS 10
+#define RADIUS 100
+#define PARTICLES_COUNT 200
 
 const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
 const float B = 1.0f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
@@ -18,13 +17,14 @@ const float C = 1.0f; //Koeffizient C beeinflusst die Motivation für Richtung zu
 
 //Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
 const float S = 1;	 //für rs (beeinflust C)
-const float U = 0.5; //untere Schranke von rt (beeinflusst C)
-const float T = 1.5; //obere Schranke von rt
+const float U = 1.5; //untere Schranke von rt (beeinflusst C)
+const float T = 4.5; //obere Schranke von rt
 
 //the swarm
 class Swarm 
 {
 private:
+	typedef std::vector<Particle>::iterator iterator; //less writing when iterating over particles
 	std::vector<Particle> _particles;
 	float timePassed;
 
@@ -53,14 +53,12 @@ public:
 
 		srand((unsigned int)time(0));
 
-		for (int i = 0; i < NBR_PARTICLES; ++i)
+		for (int i = 0; i < PARTICLES_COUNT; ++i)
 		{
 			Particle particle;
 			
 			particle._position = glm::vec3(getRandomNumber(0, width-1), getRandomNumber(0, height-1),0);
 			particle._bestPosition = particle._position;
-			float mass = (float) getRandomNumber(5, 20);
-			particle.setMass(mass);
 
 			_particles.push_back(particle);
 		}
@@ -78,58 +76,31 @@ public:
 
 	void update(float deltaTime)
 	{
-		glm::vec3 dirCurrent(0);
-		
-		glm::vec3 dirBest(0);
-		glm::vec3 dirBestNeighbor(0);
-		glm::vec3 currentPosition(0);
-		glm::vec3 currentBestPosition(0);
-		glm::vec3 currentBestNeighborPosition(0);
-		
-		int neighborCount = 0;
-		float tmpDirection = 0.0f;
-		float bestDirection = FLT_MAX;
-
-		glm::vec3 velocity(0);
-
-		for(int i = 0; i<NBR_PARTICLES; ++i) //determine best neighbour
-		{
-			bestDirection = FLT_MAX;
-			currentPosition = _particles[i]._position;
-			currentBestPosition = _particles[i]._bestPosition;
-
-			//Aktuelle Flugrichtung
-			dirCurrent = _particles[i]._velocity; 
-			//Richtung zur meisten Nahrung
-			
-			dirBest = normalize(currentBestPosition - currentPosition); //normalize the velocity in the direction to the best found position
-
-			//Richtung zum lautesten Nachbarn
-			neighborCount = 0;
-			for(int j=0;j<NBR_PARTICLES - 1; ++j)
+		//1. determine best neighbour
+		for(int i = 0; i<PARTICLES_COUNT; ++i)
+		{		
+			//Richtung zum best-positionierten Nachbar
+			for(int j=0; j<PARTICLES_COUNT - 1; ++j) //find the neighbour with the best position
 			{
-				if(j!=i) 
+				if(j!=i) //exclude the current particle for the comparison ;) 
 				{
-					tmpDirection = glm::length(_particles[j]._position - currentPosition);
-					if(tmpDirection>RADIUS) 
+					//determine if the particle is within the range where we can hear it
+					float distance = glm::length(_particles[j]._position - _particles[i]._position);
+					if(distance<RADIUS) //update the direction to the best neighbour
 					{
-						//Nachbar gefunden
-						neighborCount++;
-						//Bewertung des Nachbarn
-						tmpDirection = distanceOf(_particles[j]._position);
-						if(tmpDirection < bestDirection) 
+						float distanceFromNeighbour = distanceOf(_particles[j]._position); //Bewertung des Nachbarn
+						if(distanceFromNeighbour < distanceOf(_particles[i]._bestNeighborPosition)) 
 						{
-							bestDirection = tmpDirection;
-							currentBestNeighborPosition = _particles[j]._position;
+							_particles[i]._bestNeighborPosition = _particles[j]._position;
 						}
 					}
 				}
-				if(neighborCount > MAX_NEIGHBORS) {
-					break;
-				}
 			}
-			dirBestNeighbor = normalize(currentBestNeighborPosition - currentPosition); //normalize the velocity in the direction to the best neighbour
+		}
 
+		//2. update current position
+		for (iterator it = _particles.begin(); it != _particles.end(); ++it)
+		{
 			// Der Geschwindigkeitsvektor wird dabei als Summe der drei motivierten Richtungen des Partikels berechnet:
 			// vi(t+1) = a * vi(t) + b * ( xi(p) - xi(t) ) + c * ( xj(t) - xi(t) )
 
@@ -141,24 +112,33 @@ public:
 			float rs = getRandomNumberFloat(0, S);
 			float rt = getRandomNumberFloat(U, T);
 
-			velocity = A * dirCurrent + rs * B * dirBest + rt * C * dirBestNeighbor;
+			//Richtung zur besten beobachteten Position (die Eigene)
+			glm::vec3 dirToBestPos = normalize(it->_bestPosition - it->_position); //normalize the velocity in the direction to the best found position
+
+			glm::vec3 dirToBestNeighbor = normalize(it->_bestNeighborPosition - it->_position); //normalize the velocity in the direction to the best neighbour
+			
+			//calculate the final direction in which to move
+			glm::vec3 velocity = A * it->_velocity + rs * B * dirToBestPos + rt * C * dirToBestNeighbor;
+			
+			// Update current Position: s = v*t, ds = v*dt
+			it->_velocity = velocity; // set new velocity
+			it->_position = it->_position + it->_velocity * deltaTime; 
+
+			//Bewertung der neuen Position: ist neue Position besser als die bekannte Beste?
+			if(distanceOf(it->_position) < distanceOf(it->_bestPosition)) 
+			{
+				it->_bestPosition = it->_position;
+			}
 
 			timePassed += deltaTime;
 
 			if (timePassed >= 1.0f)
 			{
 				timePassed = 0.0f;
-				if (i == 0)
-					std::cout << "Pos: " << (int)_particles[i]._position.x << "," << (int)_particles[i]._position.y << "\t Velocity: " << (int)velocity.x << "," << (int)velocity.y << std::endl;
+				int elementToPrint = PARTICLES_COUNT * 0.5f;
+				std::cout << "Pos: " << (int)_particles[elementToPrint]._position.x << "," << (int)_particles[elementToPrint]._position.y << "\t Velocity: " << (int)_particles[elementToPrint]._velocity.x << "," << (int)_particles[elementToPrint]._velocity.y << std::endl;
 			}
-		
-			_particles[i].integrate(deltaTime, velocity);
 			
-			//Bewertung: aktuelle Position besser als die bekannte Beste?
-			if(distanceOf(currentPosition) < distanceOf(currentBestPosition)) 
-			{
-				_particles[i]._bestPosition = currentPosition;
-			}
 		}
 	}
 
