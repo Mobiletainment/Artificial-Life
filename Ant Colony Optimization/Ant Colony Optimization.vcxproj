@@ -14,7 +14,7 @@
     <ProjectGuid>{CB5BE490-F1A4-4E14-8491-6A144C5F785D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ParticleSwarmOptimization</RootNamespace>
-    <ProjectName>Particle Swarm Optimization</ProjectName>
+    <ProjectName>Ant Colony Optimization</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -79,12 +79,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Swarm.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="Cube.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="Hex.h" />
+    <ClInclude Include="hexagon.h" />
+    <ClInclude Include="hexagonmap.h" />
+    <ClInclude Include="ScreenCoordinate.h" />
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="hexagonmap.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Swarm.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

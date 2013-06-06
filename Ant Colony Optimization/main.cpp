@@ -1,15 +1,18 @@
 #include <GL\glfw.h>
 #include <stdlib.h>
 #include <iostream>
-#include "swarm.h"
 #include "Timer.h"
+#include "hexagonmap.h"
 
 #pragma comment(lib, "GLFW.lib")
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
 static const int WIDTH = 1000;
-static const int HEIGHT = 800;
+static const int HEIGHT = 780;
+
+#define PI 3.141592f
+#define SIZE 10
 
 int main( void )
 {
@@ -34,18 +37,22 @@ int main( void )
 	glOrtho(0,  WIDTH,0, HEIGHT, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
+
 	glfwSwapInterval(1);
-	
-	Swarm _gf(WIDTH,HEIGHT);
+
+	//Swarm _gf(WIDTH,HEIGHT);
 	//_gf.init();
 
-	glfwSetMouseButtonCallback( &Swarm::mouse);
+	glfwSetMouseButtonCallback( &HexagonMap::mouseButtonCallback);
+	
+	HexagonMap &hexmap = HexagonMap::getInstance();
+	hexmap.initialize(48,43,SIZE,WIDTH,HEIGHT);
 
 	Timer t;
 	t.start();
 	float currentTime = t.getElapsedTimeInMilliSec();
 	// Main loop
+
 	while( running )
 	{
 		static float lastTime = t.getElapsedTimeInMilliSec();
@@ -53,13 +60,11 @@ int main( void )
 		float deltaTime = (currentTime - lastTime) / 1000.0f;
 		lastTime = currentTime;
 
-		
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		_gf.updateMousePos();
-		_gf.update(deltaTime);
-		_gf.render(deltaTime);
-		//_gf.swap();
+
+		hexmap.updateMousePos();
+		hexmap.render(deltaTime);
 
 		// Swap front and back rendering buffers
 		glfwSwapBuffers();
