@@ -9,7 +9,7 @@
 #include <algorithm> 
 #include "Particle.h"
 
-#define RADIUS 100
+#define RADIUS 300
 #define PARTICLES_COUNT 200
 
 const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
@@ -94,24 +94,38 @@ public:
 		
 
 		for(int i = 0; i<PARTICLES_COUNT; ++i) //für jedes Partikel den besten Nachbar im Umkreis updaten
-		{		
-			//Nähe zum Ziel vom best-positionierten Nachbar vergleichen
-			for(int j=0; j<PARTICLES_COUNT - 1; ++j) //find the neighbour with the best position
+		{	
+			//Code is almost duplicated, but necessary for performance reason
+
+			for (int j = i-1; j >= i; --j) //all neighbours left from current particle (from nearest to farest)
 			{
-				if(j!=i) //exclude the current particle for the comparison ;) 
+				float distanceToEachOther = glm::length(_particles[j]._position - _particles[i]._position);
+				if(distanceToEachOther > RADIUS) //update the best neighbour only if it is within radius
+					break; //avoid comparing useless particles which are too far away anyway
+
+				//Bewertung der eigenen besten Position mit der Position des Nachbars
+				if(_particles[j]._distance < _particles[i]._distance) 
 				{
-					//determine if the particle is within the range where we can hear it
-					float distanceToEachOther = glm::length(_particles[j]._position - _particles[i]._position);
-					if(distanceToEachOther<RADIUS) //update the direction to the best neighbour if within radius
-					{
-						//Bewertung der besten Position mit Nachbar
-						if(_particles[j]._distance < _particles[i]._distance) 
-						{
-							_particles[i]._bestNeighborPosition = _particles[j]._position;
-						}
-					}
+					_particles[i]._bestNeighborPosition = _particles[j]._position; //neue beste Position
 				}
 			}
+
+			//exclude the current particle for in order to not compare it with itself
+
+			for (int j = i+1; j < PARTICLES_COUNT; ++j) //all neighbours right from current particle (from nearest to farest)
+			{
+				float distanceToEachOther = glm::length(_particles[j]._position - _particles[i]._position);
+				if(distanceToEachOther > RADIUS) //update the best neighbour only if it is within radius
+					break; //avoid comparing useless particles which are too far away anyway
+
+				//Bewertung der eigenen besten Position mit der Position des Nachbars
+				if(_particles[j]._distance < _particles[i]._distance) 
+				{
+					_particles[i]._bestNeighborPosition = _particles[j]._position; //neue beste Position
+				}
+			}
+
+			
 		}
 
 		//2. update current position
@@ -158,7 +172,7 @@ public:
 		}
 	}
 
-	glm::vec3 normalize(glm::vec3 vector)
+	glm::vec3 normalize(glm::vec3 &vector)
 	{
 		if (glm::length(vector) > 0) //normalize the velocity for the specified direction
 			return glm::normalize(vector);
@@ -166,12 +180,12 @@ public:
 		return vector;
 	}
 
-	float distanceOf(glm::vec3 position)
+	float distanceOf(glm::vec3 &position)
 	{
 		return glm::length(mousePosition - position);
 	}
 
-	void render( float deltaTime )
+	void render(float deltaTime)
 	{
 		glBegin(GL_POINTS);
 		for(std::vector<Particle>::iterator it = _particles.begin(); it != _particles.end(); ++it)
