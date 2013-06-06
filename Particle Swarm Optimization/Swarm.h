@@ -8,123 +8,62 @@
 #include <ctime>
 #include <GL\glfw.h>
 #include <iostream>
+#include "Particle.h"
 
 #define RADIUS 10
 #define NBR_PARTICLES 1000
 #define MAX_NEIGHBORS 10
-#define COA 0.3f
-#define COB 0.5f
-#define COC 0.5f
 
-//The smallest part of the swarm
-class Particle 
-{
-public:
-	glm::vec3 _bestPosition;	//Best Position so far
-	glm::vec3 _position;		//Current Position
-	glm::vec3 _velocity;		//Current Velocity
-	glm::vec3 _accForce;		//Current accumulated Force
-	glm::vec3 _acceleration;	//Current Acceleration
-	float _inverseMass;			//Inverse Mass of Particle
-	float _damping;				//Damping of Particle
+const float A = 0.3f;
+const float B = 0.3f;
+const float C = 0.3f;
 
-	Particle( void )
-	{
-		reset();
-	}
-
-	~Particle( void )
-	{
-		//Kill it with fire
-	}
-
-	void integrate( float deltaTime ) 
-	{
-		_position += _velocity * deltaTime;
-		_velocity += _acceleration + (_accForce * _inverseMass) * deltaTime;
-		_velocity *= pow(_damping, deltaTime);
-		_accForce = glm::vec3(0);
-	}
-
-	void setMass(const float mass)
-	{
-		assert(mass != 0);
-		_inverseMass = ((float) 1.0)/mass;
-	}
-
-	float getMass() const
-	{
-		if (_inverseMass == 0) {
-			return FLT_MAX;
-		} else {
-			return ((float)1.0)/_inverseMass;
-		}
-	}
-
-	void setInverseMass(const float inverseMass)
-	{
-		_inverseMass = inverseMass;
-	}
-
-	float getInverseMass() const
-	{
-		return _inverseMass;
-	}
-
-	void addForce( const glm::vec3 &force )
-	{
-		_accForce += force;
-	}
-
-	bool hasFiniteMass( void ) const
-	{
-		return _inverseMass >= 0.0f;
-	}
-
-	void reset( void )
-	{
-		_bestPosition	= glm::vec3(0);
-		_position		= glm::vec3(0);
-		_velocity		= glm::vec3(0);
-		_acceleration	= glm::vec3(0);
-		_accForce		= glm::vec3(0);
-		_inverseMass	= 0.0;
-		_damping		= 0.0;
-	}
-};
+const float S = 4;
+const float U = 0.5;
+const float T = 1.5;
 
 //the swarm
 class Swarm 
 {
+private:
+	std::vector<Particle> _particles;
+
 public:
 	static int mouseX;
 	static int mouseY;
 	int _width;
 	int _height;
 
-	std::vector<Particle> _particles;
+	
 	Swarm( int width, int height ) : _width(width), _height(height)
 	{
-		srand((unsigned)time(0));
-		_particles.resize(NBR_PARTICLES);
-		for(std::vector<Particle>::iterator it = _particles.begin(); it != _particles.end(); ++it)
+		srand((unsigned int)time(0));
+
+		for (int i = 0; i < NBR_PARTICLES; ++i)
 		{
-			(*it)._position = glm::vec3(getRandomNumber(50,_width-50),getRandomNumber(50,_height-50),0);
-			(*it)._bestPosition = (*it)._position;
-			(*it).setMass((float) getRandomNumber(5,20));
-			(*it)._damping = 0.90f;//((float) getRandomNumber(90,95)/100.0f);
+			Particle particle;
+			
+			particle._position = glm::vec3(getRandomNumber(50,_width-50),getRandomNumber(50,_height-50),0);
+			particle._bestPosition = particle._position;
+			float mass = (float) getRandomNumber(5, 20);
+			particle.setMass(mass);
+			particle._damping = 0.90f;
+
+			_particles.push_back(particle);
 		}
 	}
 
-	int getRandomNumber(int from, int to) 
+	int getRandomNumber(int min, int max) 
 	{
-		int range = (to - from);
-		int rnd = from + int((range * rand()) / (RAND_MAX + 1.0));
-		if(rnd == 0) return 1;
-		return rnd;
+		return min + (rand() % (max - min + 1));
 	}
 
-	void update( float deltaTime )
+	float getRandomNumberFloat(float min, float max)
+	{
+		return min + (float)rand()/((float)RAND_MAX/(max-min));
+	}
+
+	void update(float deltaTime)
 	{
 		glm::vec3 dirCurrent(0);
 		glm::vec3 mousePosition(mouseX,_height-mouseY,0);
@@ -176,7 +115,18 @@ public:
 			}
 			dirBestNeighbor = currentBestNeighborPosition - currentPosition;
 
-			sum = dirCurrent*0.5f + dirBest*0.9f*(float)getRandomNumber(1,4) + dirBestNeighbor*0.6f*(float)getRandomNumber(1,4);
+			// Der Geschwindigkeitsvektor wird dabei als Summe der drei motivierten Richtungen des Partikels berechnet:
+			// vi(t+1) = a * vi(t) + b * ( xi(p) - xi(t) ) + c * ( xj(t) - xi(t) )
+
+			// Um neue „unerforschte“ Bereiche zu explorerieren ist noch ein zusätzlicher Anteil an „Zufall“ nötig
+			//  -> Die Geschwindigkeitsvektoren für die beste beobachtete Position und den besten Nachbarn werden mit Unschärfe versehen.
+			// vi(t+1) = a * vi(t) + rs * b * ( xi(p) - xi(t) ) + rt * c * ( xj(t) - xi(t) )
+
+			//Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
+			float rs = getRandomNumberFloat(0, S);
+			float rt = getRandomNumberFloat(U, T);
+
+			sum = A * dirCurrent + rs * B * dirBest + rt * C * dirBestNeighbor;
 
 			_particles[i].addForce(sum);
 			_particles[i].integrate(deltaTime);

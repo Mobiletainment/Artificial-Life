@@ -8,8 +8,8 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
-static const int WIDTH = 1000;
-static const int HEIGHT = 800;
+static const int WIDTH = 1600;
+static const int HEIGHT = 950;
 
 int main( void )
 {
@@ -37,7 +37,7 @@ int main( void )
 	
 	glfwSwapInterval(1);
 	
-	Swarm _gf(WIDTH,HEIGHT);
+	Swarm swarm(WIDTH,HEIGHT);
 	//_gf.init();
 
 	glfwSetMouseButtonCallback( &Swarm::mouse);
@@ -53,12 +53,11 @@ int main( void )
 		float deltaTime = (currentTime - lastTime) / 1000.0f;
 		lastTime = currentTime;
 
-		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		_gf.updateMousePos();
-		_gf.update(deltaTime);
-		_gf.render(deltaTime);
+		swarm.updateMousePos();
+		swarm.update(deltaTime);
+		swarm.render(deltaTime);
 		//_gf.swap();
 
 		// Swap front and back rendering buffers

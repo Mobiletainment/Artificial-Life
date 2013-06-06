@@ -79,6 +79,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="Swarm.h" />
     <ClInclude Include="Timer.h" />
   </ItemGroup>
