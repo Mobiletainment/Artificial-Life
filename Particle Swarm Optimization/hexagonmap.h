@@ -31,21 +31,13 @@ public:
 
 	std::vector<std::vector<Hexagon>> _hexagonmap;
 
-	HexagonMap( void )
+	static HexagonMap& getInstance()
 	{
-		_hex_size	= 0.0f;  
-		_hex_width	= 0.0f; 
-		_hex_height	= 0.0f;
-		_hex_horiz	= 0.0f; 
-		_hex_vert	= 0.0f;  
-		_columns	= 0;
-		_rows		= 0;
-		WIDTH = 0;
-		HEIGHT = 0;
-		srand ( 5 );
+		static HexagonMap instance; // Guaranteed to be destroyed & instantiated on first use
+		return instance;
 	}
 
-
+	
 	void initialize( int columns, int rows, float size, int width, int height) 
 	{
 		WIDTH = width;
@@ -123,7 +115,12 @@ public:
 		glfwGetMousePos(&mouseX,&mouseY);
 	}
 
-	static void mouse( int key, int action )
+	static void mouseButtonCallback( int key, int action )
+	{
+		getInstance().mouseButtonCallbackImpl(key, action);
+	}
+
+	void mouseButtonCallbackImpl(int key, int action)
 	{
 		if(key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
 		{
@@ -149,6 +146,24 @@ public:
 	z = r
 	y = -x-z
 	*/
+
+private:
+	HexagonMap( void )
+	{
+		_hex_size	= 0.0f;  
+		_hex_width	= 0.0f; 
+		_hex_height	= 0.0f;
+		_hex_horiz	= 0.0f; 
+		_hex_vert	= 0.0f;  
+		_columns	= 0;
+		_rows		= 0;
+		WIDTH = 0;
+		HEIGHT = 0;
+		srand ( 5 );
+	}
+
+	HexagonMap(HexagonMap const&);     // Don't Implement
+	void operator=(HexagonMap const&); // Don't implement
 };
 
 #endif HEXAGONMAP_H

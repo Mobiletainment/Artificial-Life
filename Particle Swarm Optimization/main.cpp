@@ -43,9 +43,9 @@ int main( void )
 	//Swarm _gf(WIDTH,HEIGHT);
 	//_gf.init();
 
-	glfwSetMouseButtonCallback( &HexagonMap::mouse);
-
-	HexagonMap hexmap;
+	glfwSetMouseButtonCallback( &HexagonMap::mouseButtonCallback);
+	
+	HexagonMap &hexmap = HexagonMap::getInstance();
 	hexmap.initialize(48,43,SIZE,WIDTH,HEIGHT);
 
 	Timer t;
