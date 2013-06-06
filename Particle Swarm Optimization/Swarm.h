@@ -1,6 +1,4 @@
 #pragma once
-#ifndef SWARM_H
-#define SWARM_H
 
 #include <glm.hpp>
 #include <vector>
@@ -14,23 +12,23 @@
 #define NBR_PARTICLES 1000
 #define MAX_NEIGHBORS 10
 
-const float A = 0.3f;
-const float B = 0.3f;
-const float C = 0.3f;
+const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
+const float B = 1.0f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
+const float C = 1.0f; //Koeffizient C beeinflusst die Motivation für Richtung zum besten Nachbar
 
-const float S = 4;
-const float U = 0.5;
-const float T = 1.5;
+//Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
+const float S = 1;	 //für rs (beeinflust C)
+const float U = 0.5; //untere Schranke von rt (beeinflusst C)
+const float T = 1.5; //obere Schranke von rt
 
 //the swarm
 class Swarm 
 {
 private:
 	std::vector<Particle> _particles;
+	float timePassed;
 
 public:
-	static int mouseX;
-	static int mouseY;
 	glm::vec3 mousePosition;
 	int _width;
 	int _height;
@@ -51,17 +49,18 @@ public:
 		this->_width = width;
 		this->_height = height;
 
+		timePassed = 0.0f;
+
 		srand((unsigned int)time(0));
 
 		for (int i = 0; i < NBR_PARTICLES; ++i)
 		{
 			Particle particle;
 			
-			particle._position = glm::vec3(getRandomNumber(50,_width-50),getRandomNumber(50,_height-50),0);
+			particle._position = glm::vec3(getRandomNumber(0, width-1), getRandomNumber(0, height-1),0);
 			particle._bestPosition = particle._position;
 			float mass = (float) getRandomNumber(5, 20);
 			particle.setMass(mass);
-			particle._damping = 0.90f;
 
 			_particles.push_back(particle);
 		}
@@ -88,37 +87,39 @@ public:
 		glm::vec3 currentBestNeighborPosition(0);
 		
 		int neighborCount = 0;
-		float tmpLength = 0.0f;
-		float bestLength = FLT_MAX;
+		float tmpDirection = 0.0f;
+		float bestDirection = FLT_MAX;
 
-		glm::vec3 sum(0);
+		glm::vec3 velocity(0);
 
-		for(int i = 0;i<NBR_PARTICLES; ++i) 
+		for(int i = 0; i<NBR_PARTICLES; ++i) //determine best neighbour
 		{
-			bestLength = FLT_MAX;
+			bestDirection = FLT_MAX;
 			currentPosition = _particles[i]._position;
 			currentBestPosition = _particles[i]._bestPosition;
 
 			//Aktuelle Flugrichtung
 			dirCurrent = _particles[i]._velocity; 
 			//Richtung zur meisten Nahrung
-			dirBest = currentBestPosition - currentPosition;
+			
+			dirBest = normalize(currentBestPosition - currentPosition); //normalize the velocity in the direction to the best found position
+
 			//Richtung zum lautesten Nachbarn
 			neighborCount = 0;
 			for(int j=0;j<NBR_PARTICLES - 1; ++j)
 			{
 				if(j!=i) 
 				{
-					tmpLength = glm::length(_particles[j]._position - currentPosition);
-					if(tmpLength>RADIUS) 
+					tmpDirection = glm::length(_particles[j]._position - currentPosition);
+					if(tmpDirection>RADIUS) 
 					{
 						//Nachbar gefunden
 						neighborCount++;
 						//Bewertung des Nachbarn
-						tmpLength = glm::length(mousePosition - _particles[j]._position);
-						if(tmpLength < bestLength) 
+						tmpDirection = distanceOf(_particles[j]._position);
+						if(tmpDirection < bestDirection) 
 						{
-							bestLength = tmpLength;
+							bestDirection = tmpDirection;
 							currentBestNeighborPosition = _particles[j]._position;
 						}
 					}
@@ -127,7 +128,7 @@ public:
 					break;
 				}
 			}
-			dirBestNeighbor = currentBestNeighborPosition - currentPosition;
+			dirBestNeighbor = normalize(currentBestNeighborPosition - currentPosition); //normalize the velocity in the direction to the best neighbour
 
 			// Der Geschwindigkeitsvektor wird dabei als Summe der drei motivierten Richtungen des Partikels berechnet:
 			// vi(t+1) = a * vi(t) + b * ( xi(p) - xi(t) ) + c * ( xj(t) - xi(t) )
@@ -140,19 +141,36 @@ public:
 			float rs = getRandomNumberFloat(0, S);
 			float rt = getRandomNumberFloat(U, T);
 
-			sum = A * dirCurrent + rs * B * dirBest + rt * C * dirBestNeighbor;
+			velocity = A * dirCurrent + rs * B * dirBest + rt * C * dirBestNeighbor;
 
-			_particles[i].addForce(sum);
-			_particles[i].integrate(deltaTime);
-			//Bewertung
-			if( glm::length(mousePosition-currentPosition) < glm::length(mousePosition-currentBestPosition)) 
+			timePassed += deltaTime;
+
+			if (timePassed >= 1.0f)
+			{
+				timePassed = 0.0f;
+				if (i == 0)
+					std::cout << "Pos: " << (int)_particles[i]._position.x << "," << (int)_particles[i]._position.y << "\t Velocity: " << (int)velocity.x << "," << (int)velocity.y << std::endl;
+			}
+		
+			_particles[i].integrate(deltaTime, velocity);
+			
+			//Bewertung: aktuelle Position besser als die bekannte Beste?
+			if(distanceOf(currentPosition) < distanceOf(currentBestPosition)) 
 			{
 				_particles[i]._bestPosition = currentPosition;
 			}
 		}
 	}
 
-	float fitnessOf(glm::vec3 position)
+	glm::vec3 normalize(glm::vec3 vector)
+	{
+		if (glm::length(vector) > 0) //normalize the velocity for the specified direction
+			return glm::normalize(vector);
+
+		return vector;
+	}
+
+	float distanceOf(glm::vec3 position)
 	{
 		return glm::length(mousePosition - position);
 	}
@@ -168,30 +186,16 @@ public:
 		glEnd();
 	}
 
-	static void updateMousePos( void )
+	static void updateMousePos(int posX, int posY)
+	{
+		getInstance().updateMousePosImpl(posX, posY);
+	}
+
+	void updateMousePosImpl(int mouseX, int mouseY)
 	{
 		glfwGetMousePos(&mouseX,&mouseY);
-	}
-
-
-
-	static void mouse( int key, int action )
-	{
-		getInstance().updateMousePosImpl(key, action);
-	}
-
-	void updateMousePosImpl(int key, int action)
-	{
-		if(key == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
-		{
-			glfwGetMousePos(&mouseX,&mouseY);
-			mousePosition.x = mouseX;
-			mousePosition.y = _height-mouseY;
-		}
-		if(key == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) 
-		{
-		}
+		std::cout << "MousePos: " << mouseX << "," << mouseX << std::endl; 
+		mousePosition.x = mouseX;
+		mousePosition.y = _height-mouseY;
 	}
 };
-
-#endif SWARM_H

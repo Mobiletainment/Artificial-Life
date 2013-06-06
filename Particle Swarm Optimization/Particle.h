@@ -15,7 +15,7 @@ public:
 	{
 		_bestPosition	= glm::vec3(0);
 		_position		= glm::vec3(0);
-		_velocity		= glm::vec3(1.0f, 0.0f, 0.0f);
+		_velocity		= glm::vec3(0.0f, 0.0f, 0.0f);
 		_accForce		= glm::vec3(0);
 		_inverseMass	= 0.0;
 	}
@@ -25,18 +25,19 @@ public:
 		//nothing to clean up
 	}
 
-	void integrate(float deltaTime) 
+	void integrate(float deltaTime, const glm::vec3 &velocity) 
 	{
 		// s = v*t
-		_position += _velocity * deltaTime; //ds = v*dt
+		_velocity = velocity;
+		_position = _position + _velocity * deltaTime; //ds = v*dt
 
 		// a = F/m    -->    a = F*(1/m)
 		// v = a * t
-		_velocity += (_accForce * _inverseMass) * deltaTime;
+		//_velocity += (_accForce * _inverseMass) * deltaTime;
 		
 		// damping^dt
 		//_velocity *= pow(_damping, deltaTime);
-		_accForce = glm::vec3(0);
+		//_accForce = glm::vec3(0);
 	}
 
 	void setMass(const float mass)
@@ -64,10 +65,6 @@ public:
 		return _inverseMass;
 	}
 
-	void addForce( const glm::vec3 &force )
-	{
-		_accForce += force;
-	}
 
 	bool hasFiniteMass( void ) const
 	{

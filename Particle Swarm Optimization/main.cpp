@@ -8,8 +8,8 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
-static const int WIDTH = 1600;
-static const int HEIGHT = 950;
+static const int WIDTH = 1024;
+static const int HEIGHT = 768;
 
 int main( void )
 {
