@@ -93,20 +93,19 @@ public:
 		);
 		
 
-		for(int i = 0; i<PARTICLES_COUNT; ++i)
+		for(int i = 0; i<PARTICLES_COUNT; ++i) //für jedes Partikel den besten Nachbar im Umkreis updaten
 		{		
-			//Richtung zum best-positionierten Nachbar
+			//Nähe zum Ziel vom best-positionierten Nachbar vergleichen
 			for(int j=0; j<PARTICLES_COUNT - 1; ++j) //find the neighbour with the best position
 			{
 				if(j!=i) //exclude the current particle for the comparison ;) 
 				{
 					//determine if the particle is within the range where we can hear it
-					float distance = glm::length(_particles[j]._position - _particles[i]._position);
-					if(distance<RADIUS) //update the direction to the best neighbour
+					float distanceToEachOther = glm::length(_particles[j]._position - _particles[i]._position);
+					if(distanceToEachOther<RADIUS) //update the direction to the best neighbour if within radius
 					{
 						//Bewertung der besten Position mit Nachbar
-						float distanceFromNeighbour = _particles[j]._distance;
-						if(distanceFromNeighbour < _particles[i]._distance) 
+						if(_particles[j]._distance < _particles[i]._distance) 
 						{
 							_particles[i]._bestNeighborPosition = _particles[j]._position;
 						}
