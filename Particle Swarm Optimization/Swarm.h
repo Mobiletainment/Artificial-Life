@@ -10,12 +10,12 @@
 #include <algorithm> 
 #include "Particle.h"
 
-const int PARTICLES_COUNT = 10000;
-const int NEIGHBOUR_CONT = 100; // used as number of neighbours within social neighbourhood (array index)
+const int PARTICLES_COUNT = 20000;
+const int NEIGHBOUR_CONT = 200; // used as number of neighbours within social neighbourhood (array index)
 
 const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
-const float B = 1.0f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
-const float C = 1.0f; //Koeffizient C beeinflusst die Motivation für Richtung zum besten Nachbar
+const float B = 1.5f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
+const float C = 2.0f; //Koeffizient C beeinflusst die Motivation für Richtung zum besten Nachbar
 
 //Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
 const float S = 1;	 //für rs (beeinflust C)

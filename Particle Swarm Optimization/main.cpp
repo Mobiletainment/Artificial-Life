@@ -8,8 +8,8 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
-static const int WIDTH = 1024;
-static const int HEIGHT = 768;
+static const int WIDTH = 1600;
+static const int HEIGHT = 950;
 
 int main( void )
 {
@@ -27,7 +27,7 @@ int main( void )
 		exit( EXIT_FAILURE );
 	}
 
-
+	glfwSetWindowTitle("Multi-Agent Systems: Particle Swarm Optimization (PSO) by David Pertiller" );
 	glViewport(0, 0, WIDTH, HEIGHT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
