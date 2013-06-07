@@ -13,14 +13,14 @@
 const int PARTICLES_COUNT = 20000;
 const int NEIGHBOUR_CONT = 200; // used as number of neighbours within social neighbourhood (array index)
 
-const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
-const float B = 1.5f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
-const float C = 2.0f; //Koeffizient C beeinflusst die Motivation für Richtung zum besten Nachbar
+const float A = 0.9f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
+const float B = 1.1f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
+const float C = 3.0f; //Koeffizient C beeinflusst die Motivation für Richtung zum besten Nachbar
 
 //Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
-const float S = 1;	 //für rs (beeinflust C)
-const float U = 0.5; //untere Schranke von rt (beeinflusst C)
-const float T = 1.5; //obere Schranke von rt
+const float S = 1.0;	 //für rs (beeinflust B)
+const float U = 0.9; //untere Schranke von rt (beeinflusst C)
+const float T = 1.1; //obere Schranke von rt
 
 //the swarm
 class Swarm 
@@ -64,7 +64,7 @@ public:
 			particle._bestPosition = particle._position;
 			particle._distance = 0.0f;
 			particle._bestNeighborPosition = glm::vec3(0);
-			particle._velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+			particle._velocity = glm::vec3(getRandomNumberFloat(-3.0f, 3.0f), getRandomNumberFloat(-3.0f, 3.0f), 0.0f);
 
 			_particles.push_back(particle);
 		}
@@ -80,7 +80,7 @@ public:
 		return  min + (float)rand()/((float)RAND_MAX/(max-min));
 	}
 
-	void update(float deltaTime)
+	void updateAndRender(float deltaTime)
 	{
 		//1. determine best neighbour
 
@@ -110,8 +110,6 @@ public:
 
 					if(--compareWithSocialNeighbours == 0)
 						break; //avoid too much comparisons and compare to a maximum of NEIGHBOUR_COUNT particles for best position
-
-
 				}
 
 				//exclude the current particle for in order to not compare it with itself
