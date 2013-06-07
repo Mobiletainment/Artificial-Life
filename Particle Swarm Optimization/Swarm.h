@@ -9,8 +9,9 @@
 #include <algorithm> 
 #include "Particle.h"
 
-#define RADIUS 300
-#define PARTICLES_COUNT 200
+const int RADIUS = 100;
+const long RADIUS2 = RADIUS*RADIUS;
+const int PARTICLES_COUNT = 100;
 
 const float A = 1.0f; //Koeffizient A beeinflusst die Motivation für die aktuelle Geschwindigkeit
 const float B = 1.0f; //Koeffizient B beeinflusst die Motivation für Richtung zur besten beobachteten Position
@@ -72,7 +73,7 @@ public:
 
 	float getRandomNumberFloat(float min, float max)
 	{
-		return min + (float)rand()/((float)RAND_MAX/(max-min));
+		return  min + (float)rand()/((float)RAND_MAX/(max-min));
 	}
 
 	void update(float deltaTime)
@@ -85,10 +86,13 @@ public:
 			it->_distance = distanceOf(it->_position);
 		}
 
-		//sorting by distance to target
-		std::sort(_particles.begin(), _particles.end(), [](Particle one, Particle two) //avoid binding instance compare method and just use a lambda expression
+		//sorting by position
+		std::sort(_particles.begin(), _particles.end(), [](Particle &one, Particle &two) //avoid binding instance compare method and just use a lambda expression
 			{
-				return one._distance > two._distance;
+				glm::vec3 distance = (one._position - two._position);
+				long euclidDistance2 = distance.x * distance.x + distance.y * distance.y;
+				return euclidDistance2 < RADIUS2;
+				//return (one._position.x - two._position.x) <= 0 && (one._position.y - two._position.y) <= 0;
 			}
 		);
 		
@@ -97,7 +101,7 @@ public:
 		{	
 			//Code is almost duplicated, but necessary for performance reason
 
-			for (int j = i-1; j >= i; --j) //all neighbours left from current particle (from nearest to farest)
+			for (int j = i-1; j >= 0; --j) //all neighbours left from current particle (from nearest to farest)
 			{
 				float distanceToEachOther = glm::length(_particles[j]._position - _particles[i]._position);
 				if(distanceToEachOther > RADIUS) //update the best neighbour only if it is within radius

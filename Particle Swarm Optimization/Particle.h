@@ -11,8 +11,6 @@ struct Particle
 	glm::vec3 _velocity;		//Current Velocity	
 	Particle()
 	{
-		_position = glm::vec3(0);
-		_bestPosition = glm::vec3(0);
 		_distance = 0.0f;
 		_bestNeighborPosition = glm::vec3(0);
 		_velocity = glm::vec3(0.0f, 0.0f, 0.0f);
