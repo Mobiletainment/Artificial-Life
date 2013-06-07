@@ -56,7 +56,6 @@ int main( void )
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		swarm.update(deltaTime);
-		swarm.render(deltaTime);
 
 		// Swap front and back rendering buffers
 		glfwSwapBuffers();
