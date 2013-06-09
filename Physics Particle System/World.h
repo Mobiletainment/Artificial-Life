@@ -11,6 +11,7 @@
 #include "Particle.h"
 #include "GravityForceGenerator.h"
 #include "DragForceGenerator.h"
+#include "BounceForceGenerator.h"
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
@@ -30,6 +31,7 @@ private:
 	typedef std::vector<ForceGenerator*>::iterator fit;
 	GravityForceGenerator gravityForceGenerator;
 	DragForceGenerator dragForceGenerator;
+	BounceForceGenerator bounceForceGenerator;
 
 	ParticleID uniqueIDIncrementor;
 
@@ -153,12 +155,18 @@ public:
 			Particle *particle = it->second;
 			particle->integrate(deltaTime);
 
-			if (particle->position.y <= getFloorPlane(particle->position.x)) //Bump on floor, bounce in invert direction but with damping
+			if (particle->position.y <= getFloorPlane(particle->position.x)) //check floor contact
 			{
-				particle->position.y = getFloorPlane(particle->position.x);
-				float damping = -0.3f;
-				particle->velocity.y = particle->velocity.y * damping;
-				particle->accumForce.y = particle->accumForce.y * damping; //invert forces
+				if (particle->accumForce.y < 0) //if particle hits the floor while flying down, bounce it back
+				{
+					//Bump on floor, apply bounce force
+					particle->position.y = getFloorPlane(particle->position.x);
+					bounceForceGenerator.ApplyTo(particle);
+				}
+				else //normal floor contact, apply friction
+				{
+
+				}
 			}
 
 			glColor3f(particle->color.r, particle->color.g, particle->color.b);

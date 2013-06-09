@@ -84,7 +84,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BounceForceGenerator.h" />
     <ClInclude Include="DragForceGenerator.h" />
+    <ClInclude Include="FrictionForceGenerator.h" />
     <ClInclude Include="GravityForceGenerator.h" />
     <ClInclude Include="ForceGenerator.h" />
     <ClInclude Include="Particle.h" />
