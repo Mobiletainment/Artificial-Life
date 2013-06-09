@@ -27,7 +27,7 @@ int main( void )
 		exit( EXIT_FAILURE );
 	}
 
-	glfwSetWindowTitle("Physics: Particle System" );
+	glfwSetWindowTitle("Physics: Fireworks System" );
 	glViewport(0, 0, WIDTH, HEIGHT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
