@@ -9,6 +9,7 @@ struct Particle
 	glm::vec3 velocity; //current velocity	
 	glm::vec3 acceleration; //current Acceleration
 	glm::vec3 accumForce; //accumulated force
+	glm::vec3 color; //make it colorful
 	
 	
 	float life;
@@ -28,9 +29,9 @@ struct Particle
 	{
 		position += velocity * dt; //Update position: s = s + ds -> ds = v * dt
 		
-		glm::vec3 newAcceleration = accumForce * invMass; // a = F * (1/m) -> a = F * m^-1
+		acceleration += accumForce * invMass; // a = F * (1/m) -> a = F * m^-1
 
-		velocity = acceleration + newAcceleration * dt; //a = v/t --> v = a*t
+		velocity = acceleration * dt; //a = v/t --> v = a*t
 
 		accumForce = glm::vec3(0); //reset applied forces
 	}

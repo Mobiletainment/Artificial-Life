@@ -13,7 +13,7 @@
 #include "GravityForceGenerator.h"
 
 const int PARTICLES_COUNT = 10;
-#define GRAVITY 10;
+#define GRAVITY -10;
 
 //the World
 class World 
@@ -50,17 +50,22 @@ public:
 
 		srand((unsigned int)time(0));
 
-		gravityForceGenerator.gravity.y = 10.0f;
+		gravityForceGenerator.gravity.y = GRAVITY;
 
 		for (int i = 0; i < PARTICLES_COUNT; ++i)
 		{
 			 Particle particle;
 			 particle.position = glm::vec3(getRandomNumber(0, width), 0, 0);
-			 particle.acceleration = glm::vec3(0.0f, 1.0f, 0.0f) * 50.0f;
-			 particle.setMass(1.0f);
+			 particle.accumForce = glm::vec3(0.0f, 1.0f, 0.0f) * 20000.0f;
+			 particle.setMass(4);
 			 particle.life = getRandomNumber(5, 10);
+			 particle.color = glm::vec3(getRandomNumberFloat(0.2,1),getRandomNumberFloat(0.2,1),getRandomNumberFloat(0.2,1));
 			 _particles.push_back(particle);
-			 gravityForceGenerator.Register(&_particles[i]);
+		}
+
+		for (int i = 0; i < _particles.size(); ++i)
+		{
+			gravityForceGenerator.Register(&_particles[i]);
 		}
 
 		forceManager.RegisterForceGenerator(&gravityForceGenerator);
@@ -82,30 +87,29 @@ public:
 		forceManager.Update(deltaTime); //apply forces
 
 
+		//Integrate and Render the points (in parallel)
 		glBegin(GL_POINTS);
-
-		#pragma omp for
+		//#pragma omp for
 		for (int i = 0; i < _particles.size(); ++i)
 		{
 			Particle &particle = _particles[i];
 			particle.integrate(deltaTime);
-			glColor3f(0.7f,0.7f,0.7f);
-			glVertex3f(particle.position.x, particle.position.y, 0.0f);
+
+			if (particle.position.y < 0)
+				particle.position.y = 0;
+
+			glColor3f(particle.color.r, particle.color.g, particle.color.b);
+
+			int radius = particle.getMass();
+
+			for(int y=0; y<=2*radius; y++)
+				for(int x=-radius; x<=radius; x++)
+					glVertex3f(particle.position.x+x, particle.position.y+y, 0.0f);
+         
+			cout << "Position: " << (int)particle.position.x << "," << (int)particle.position.y << "\tVelocity: " << (int)particle.velocity.y << endl;
 		}
 
 		glEnd();
-	}
-
-	void render(float deltaTime)
-	{
-		//Render the points (in parallel)
-		
-		
-		for(int i = 0; i < PARTICLES_COUNT; ++i)
-		{
-					
-		}
-		
 	}
 
 	inline glm::vec3 normalize(glm::vec3 &vector)
