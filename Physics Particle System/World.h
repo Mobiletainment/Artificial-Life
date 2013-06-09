@@ -37,6 +37,7 @@ public:
 	glm::vec3 mousePosition;
 	int _width;
 	int _height;
+	float _k; //Steigung des Bodens
 
 	static World& getInstance()
 	{
@@ -90,6 +91,8 @@ public:
 		this->_width = width;
 		this->_height = height;
 
+		_k = 30.0f / _width; //bis zum Bildschirmrand steigt der Boden um 30 Grad
+
 		timePassed = 0.0f;
 
 		srand((unsigned int)time(0));
@@ -107,7 +110,7 @@ public:
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
 
-			 particle->position = glm::vec3(getRandomNumber(50, width-50), 0.1, 0);
+			 particle->position = glm::vec3(getRandomNumber(50, width-50), 31.0, 0);
 			 particle->accumForce = glm::vec3(0.0f, 1.0f, 0.0f) * (float)getRandomNumber(30000,35000);
 			 particle->setMass(4);
 			 particle->life = getRandomNumber(5, 6);
@@ -150,11 +153,12 @@ public:
 			Particle *particle = it->second;
 			particle->integrate(deltaTime);
 
-			if (particle->position.y <= 0) //Bump on floor, bounce in invert direction but with damping
+			if (particle->position.y <= getFloorPlane(particle->position.x)) //Bump on floor, bounce in invert direction but with damping
 			{
-				float damping = -0.6f;
-				particle->velocity = particle->velocity * damping;
-				particle->accumForce = particle->accumForce * damping; //invert forces
+				particle->position.y = getFloorPlane(particle->position.x);
+				float damping = -0.3f;
+				particle->velocity.y = particle->velocity.y * damping;
+				particle->accumForce.y = particle->accumForce.y * damping; //invert forces
 			}
 
 			glColor3f(particle->color.r, particle->color.g, particle->color.b);
@@ -201,6 +205,17 @@ public:
 
 		//cout << "Particles: " << uniqueIDIncrementor << endl;
 		
+		glColor3f(1.0, 1.0, 1.0);
+			glBegin(GL_LINES);
+			glVertex3f(0.0, 0.0, 0.0);
+			glVertex3f(_width, 30.0, 0.0);
+			glEnd();
+	}
+
+	float getFloorPlane(int x)
+	{
+		
+		return _k*x;
 	}
 
 	inline void detonateParticleAndSpawnNewOnes(Particle *parent)
