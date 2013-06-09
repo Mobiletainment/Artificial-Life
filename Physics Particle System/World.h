@@ -11,6 +11,7 @@
 #include "Particle.h"
 #include "GravityForceGenerator.h"
 #include <hash_map>
+#include <gtx/rotate_vector.hpp> 
 
 const int PARTICLES_COUNT = 1;
 #define GRAVITY -10;
@@ -19,15 +20,15 @@ const int PARTICLES_COUNT = 1;
 class World 
 {
 private:
-	typedef std::vector<Particle>::iterator iterator; //less writing when iterating over particles
-	std::hash_map<unsigned int, Particle> _particles;
-	typedef pair<unsigned int, Particle> Particle_Pair;
+	typedef std::hash_map<ParticleID, Particle>::iterator pit; //less writing when iterating over particles
+	std::hash_map<ParticleID, Particle> _particles;
+	typedef pair<ParticleID, Particle> Particle_Pair;
 
 	float timePassed;
 	std::vector<ForceGenerator*> _forceGenerators;
 	typedef std::vector<ForceGenerator*>::iterator fit;
 	GravityForceGenerator gravityForceGenerator;
-	unsigned int uniqueIDIncrementor;
+	ParticleID uniqueIDIncrementor;
 
 public:
 	glm::vec3 mousePosition;
@@ -73,7 +74,7 @@ public:
 		srand((unsigned int)time(0));
 
 		gravityForceGenerator.gravity.y = GRAVITY;
-		_particles.reserve(50000);
+		_particles.reserve(1000000);
 
 		for (int i = 0; i < PARTICLES_COUNT; ++i)
 		{
@@ -85,7 +86,7 @@ public:
 			 particle.life = getRandomNumber(5, 10);
 			 particle.color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
 			 _particles.insert(Particle_Pair(particle.uniqueID, particle));
-			 gravityForceGenerator.Register(&_particles[i]);
+			 gravityForceGenerator.Register(&(_particles.find(particle.uniqueID)->second));
 		}
 
 		RegisterForceGenerator(&gravityForceGenerator);
@@ -116,11 +117,11 @@ public:
 		glBegin(GL_POINTS);
 		//#pragma omp for
 
-		vector<unsigned int> particlesToDelete;
+		vector<ParticleID> particlesToDelete;
 
-		for (int i = 0; i < _particles.size(); ++i)
+		for (pit it = _particles.begin(); it != _particles.end(); ++it)
 		{
-			Particle &particle = _particles[i];
+			Particle &particle = it->second;
 			particle.integrate(deltaTime);
 
 			if (particle.position.y < 0)
@@ -145,7 +146,6 @@ public:
 				{
 					gravityForceGenerator.DeRegister(&particle);
 					detonateParticleAndSpawnNewOnes(particle);
-					
 				}
 
 				particlesToDelete.push_back(particle.uniqueID);
@@ -154,12 +154,13 @@ public:
 		glEnd();
 
 		//Remove dead particles
-		for (unsigned int key : particlesToDelete)
+		for (ParticleID key : particlesToDelete)
 		{
 			_particles.erase(key);
 		}
 
-		
+		cout << "Particles: " << uniqueIDIncrementor << endl;
+
 	}
 
 	inline void detonateParticleAndSpawnNewOnes(Particle &parent)
@@ -167,18 +168,26 @@ public:
 		int mass = parent.getMass() / 2;
 		glm::vec3 childColor = parent.color + 0.15f;
 		int life = mass > 1 ? mass * 5 : getRandomNumber(5, 20);
-		int newParticleCount = 100 * mass;
+		int newParticleCount = 30 * mass;
+
+		glm::vec3 forceDirection(1.0f, 0.0f, 0.0f);
+		glm::vec3 normalDirection(0.0, 0.0f, 1.0f);
+		float currentRotation = 0.0f;
+		float rotationStep = 360.0f / newParticleCount;
 
 		for (int i = 0; i < newParticleCount; ++i)
 		{
 			Particle particle(uniqueIDIncrementor++);
 			particle.position = parent.position;
-			particle.accumForce = glm::vec3(getRandomNumberFloat(0.0f, 1.0f), getRandomNumberFloat(0.0f, 1.0f), 0.0f) * 5000.0f;
+			
+			particle.accumForce = glm::rotate(forceDirection, currentRotation, normalDirection) * 1500.0f;
+			currentRotation += rotationStep;
+
 			particle.setMass(mass);
 			particle.life = life;
 			particle.color = childColor;
 			_particles.insert(Particle_Pair(particle.uniqueID, particle));
-			gravityForceGenerator.Register(&_particles[i]);
+			gravityForceGenerator.Register(&(_particles.find(particle.uniqueID)->second));
 		}
 	}
 
