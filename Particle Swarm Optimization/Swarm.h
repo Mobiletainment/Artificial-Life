@@ -170,17 +170,17 @@ public:
 				}
 				*/
 			}
-
-			//Render the points (in parallel)
-			glBegin(GL_POINTS);
-			#pragma omp for
-			for(int i = 0; i < PARTICLES_COUNT; ++i)
-			{
-				glColor3f(0.7f,0.7f,0.7f);
-				glVertex3f(_particles[i]._position.x, _particles[i]._position.y, 0.0f);		
-			}
-			glEnd();
 		}
+
+		//Render the points
+		glBegin(GL_POINTS);
+
+		for(int i = 0; i < PARTICLES_COUNT; ++i)
+		{
+			glColor3f(0.7f,0.7f,0.7f);
+			glVertex3f(_particles[i]._position.x, _particles[i]._position.y, 0.0f);		
+		}
+		glEnd();
 	}
 
 	inline glm::vec3 normalize(glm::vec3 &vector)
