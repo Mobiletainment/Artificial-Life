@@ -28,6 +28,7 @@ public:
 		//Bump on floor, bounce in invert direction but with damping
 		particle->velocity.y = particle->velocity.y * damping;
 		particle->accumForce.y = particle->accumForce.y * damping; //invert forces
+		particle->velocity.x = particle->velocity.x * 0.8f;
 	}
 
 };

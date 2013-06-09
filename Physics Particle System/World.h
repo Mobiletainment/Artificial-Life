@@ -12,12 +12,14 @@
 #include "GravityForceGenerator.h"
 #include "DragForceGenerator.h"
 #include "BounceForceGenerator.h"
+#include "FrictionForceGenerator.h"
+
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
 const int PARTICLES_COUNT = 3;
-#define GRAVITY -10;
-
+glm::vec3 GRAVITY(0.0f, -10.0f, 0.0f);
+const float planeHeight = 250.0f;
 //the World
 class World 
 {
@@ -32,6 +34,7 @@ private:
 	GravityForceGenerator gravityForceGenerator;
 	DragForceGenerator dragForceGenerator;
 	BounceForceGenerator bounceForceGenerator;
+	FrictionForceGenerator frictionForceGenerator;
 
 	ParticleID uniqueIDIncrementor;
 
@@ -93,7 +96,12 @@ public:
 		this->_width = width;
 		this->_height = height;
 
-		_k = 30.0f / _width; //bis zum Bildschirmrand steigt der Boden um 30 Grad
+		_k = planeHeight / _width; //bis zum Bildschirmrand steigt der Boden um 30 Pixel
+
+		float hypothenuse = glm::sqrt(planeHeight * planeHeight + _width * _width);
+
+		float cosTheta = _width / hypothenuse;
+		float sinTheta = planeHeight / hypothenuse;
 
 		timePassed = 0.0f;
 
@@ -101,10 +109,20 @@ public:
 
 		RegisterForceGenerator(&gravityForceGenerator);
 		RegisterForceGenerator(&dragForceGenerator);
-
-		gravityForceGenerator.gravity.y = GRAVITY;
+	
+		gravityForceGenerator.gravity = GRAVITY;
 		dragForceGenerator.k1 = 0.001;
 		dragForceGenerator.k2 = 0;
+
+		//Auf die Haftreibung (StaticFrictionForceGenerator) wurde verzichtet, da unsere Partikel nicht wieder angestoßen werden
+		//staticFrictionForceGenerator.us = 0.7f;
+		//staticFrictionForceGenerator.gravity = GRAVITY;
+
+		frictionForceGenerator.uk = 0.5f;
+		frictionForceGenerator.us = 1.0f; //faked
+		frictionForceGenerator.gravity = GRAVITY;
+		frictionForceGenerator.cosTheta = cosTheta;
+		frictionForceGenerator.sinTheta = sinTheta;
 
 		_particles.reserve(1000000);
 
@@ -112,16 +130,13 @@ public:
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
 
-			 particle->position = glm::vec3(getRandomNumber(50, width-50), 31.0, 0);
+			 particle->position = glm::vec3(getRandomNumber(150, width-150), 31.0, 0);
 			 particle->accumForce = glm::vec3(0.0f, 1.0f, 0.0f) * (float)getRandomNumber(30000,35000);
 			 particle->setMass(4);
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
 			 registerParticle(particle);
 		}
-
-		
-		
 	}
 
 	int getRandomNumber(int min, int max) 
@@ -155,18 +170,20 @@ public:
 			Particle *particle = it->second;
 			particle->integrate(deltaTime);
 
-			if (particle->position.y <= getFloorPlane(particle->position.x)) //check floor contact
+			//check floor hit or floor contact (but exclude start rockets (Mass >1))
+			if (particle->getMass() == 1 && particle->position.y <= getFloorPlane(particle->position.x)) //check floor contact
 			{
-				if (particle->accumForce.y < 0) //if particle hits the floor while flying down, bounce it back
+				if (particle->velocity.y < 0) //if particle hits the floor while flying down, bounce it back
 				{
 					//Bump on floor, apply bounce force
 					particle->position.y = getFloorPlane(particle->position.x);
 					bounceForceGenerator.ApplyTo(particle);
 				}
-				else //normal floor contact, apply friction
+				else //normal floor contact, apply friction (Gleitreibung)
 				{
-
+					frictionForceGenerator.ApplyTo(particle);
 				}
+				
 			}
 
 			glColor3f(particle->color.r, particle->color.g, particle->color.b);
@@ -214,15 +231,14 @@ public:
 		//cout << "Particles: " << uniqueIDIncrementor << endl;
 		
 		glColor3f(1.0, 1.0, 1.0);
-			glBegin(GL_LINES);
-			glVertex3f(0.0, 0.0, 0.0);
-			glVertex3f(_width, 30.0, 0.0);
-			glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(0.0, 0.0, 0.0);
+		glVertex3f(_width, planeHeight, 0.0);
+		glEnd();
 	}
 
 	float getFloorPlane(int x)
 	{
-		
 		return _k*x;
 	}
 
@@ -230,7 +246,7 @@ public:
 	{
 		int mass = parent->getMass() / 2;
 		glm::vec3 childColor = parent->color + 0.15f;
-		int life = mass > 1 ? mass * 1.5 : getRandomNumber(5, 20);
+		int life = mass > 1 ? mass * 1.5 : getRandomNumber(10, 25);
 		int newParticleCount = 20 * mass;
 
 		glm::vec3 forceDirection(1.0f, 0.0f, 0.0f);

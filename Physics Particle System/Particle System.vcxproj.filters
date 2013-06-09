@@ -17,10 +17,10 @@
     <ClInclude Include="ForceGenerator.h">
       <Filter>ForceGenerators</Filter>
     </ClInclude>
-    <ClInclude Include="FrictionForceGenerator.h">
+    <ClInclude Include="GravityForceGenerator.h">
       <Filter>ForceGenerators</Filter>
     </ClInclude>
-    <ClInclude Include="GravityForceGenerator.h">
+    <ClInclude Include="FrictionForceGenerator.h">
       <Filter>ForceGenerators</Filter>
     </ClInclude>
   </ItemGroup>

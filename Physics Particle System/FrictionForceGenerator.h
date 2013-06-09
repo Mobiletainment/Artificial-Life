@@ -3,18 +3,29 @@
 #include <glm.hpp>
 #include "ForceGenerator.h"
 
+//ist auf unsere Schiefe Plane zugeschneidert, needs refactoring ;)
 class FrictionForceGenerator : public ForceGenerator
 {
 public:
-
-	glm::vec3 gravity; //cheap and dirty member access
+	float us; //Haftreibung
+	float uk; //Gleitreibung
+	glm::vec3 gravity; //Zur Berechnung der Normalkraft benötigt
+	float cosTheta; //Winkel der Ebene
+	float sinTheta; //Versuch
 
 	void Update(float dt)
 	{
 		for (iterator it = _particles.begin(); it != _particles.end(); ++it)
 		{
-			(*it)->accumForce += (*it)->getMass() * gravity; //F = m * g
+			ApplyTo(*it);
 		}
+	}
+
+	void ApplyTo(Particle *particle)
+	{
+		float Fn = particle->getMass() * gravity.y * cosTheta;
+		particle->accumForce.y *= us * Fn; //Ffriction = u * Fn //Haftreibung
+		particle->accumForce.x *= uk * particle->getMass() * gravity.y * sinTheta; //Gleitreibung (Faked)
 	}
 
 };
