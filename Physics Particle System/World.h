@@ -10,10 +10,11 @@
 #include <algorithm> 
 #include "Particle.h"
 #include "GravityForceGenerator.h"
+#include "DragForceGenerator.h"
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
-const int PARTICLES_COUNT = 8;
+const int PARTICLES_COUNT = 3;
 #define GRAVITY -10;
 
 //the World
@@ -28,6 +29,8 @@ private:
 	std::vector<ForceGenerator*> _forceGenerators;
 	typedef std::vector<ForceGenerator*>::iterator fit;
 	GravityForceGenerator gravityForceGenerator;
+	DragForceGenerator dragForceGenerator;
+
 	ParticleID uniqueIDIncrementor;
 
 public:
@@ -64,6 +67,24 @@ public:
 		}
 	}
 
+	void registerParticle(Particle *particle)
+	{
+		_particles.insert(Particle_Pair(particle->uniqueID, particle));
+
+		for (ForceGenerator *forceGenerator : _forceGenerators)
+		{
+			forceGenerator->Register(particle);
+		}
+	}
+
+	void DeRegisterParticle(Particle *particle)
+	{
+		for (ForceGenerator *forceGenerator : _forceGenerators)
+		{
+			forceGenerator->DeRegister(particle);
+		}
+	}
+
 	void Initialize( int width, int height )
 	{
 		this->_width = width;
@@ -73,7 +94,13 @@ public:
 
 		srand((unsigned int)time(0));
 
+		RegisterForceGenerator(&gravityForceGenerator);
+		RegisterForceGenerator(&dragForceGenerator);
+
 		gravityForceGenerator.gravity.y = GRAVITY;
+		dragForceGenerator.k1 = 0.001;
+		dragForceGenerator.k2 = 0;
+
 		_particles.reserve(1000000);
 
 		for (int i = 0; i < PARTICLES_COUNT; ++i)
@@ -85,11 +112,10 @@ public:
 			 particle->setMass(4);
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
-			 _particles.insert(Particle_Pair(particle->uniqueID, particle));
-			 gravityForceGenerator.Register(_particles.find(particle->uniqueID)->second);
+			 registerParticle(particle);
 		}
 
-		RegisterForceGenerator(&gravityForceGenerator);
+		
 		
 	}
 
@@ -124,10 +150,11 @@ public:
 			Particle *particle = it->second;
 			particle->integrate(deltaTime);
 
-			if (particle->position.y <= 0) //Bump on floor, reflect
+			if (particle->position.y <= 0) //Bump on floor, bounce in invert direction but with damping
 			{
-				particle->position.y = 0;
-				particle->accumForce = particle->accumForce * 1.0f; //invert forces
+				float damping = -0.6f;
+				particle->velocity = particle->velocity * damping;
+				particle->accumForce = particle->accumForce * damping; //invert forces
 			}
 
 			glColor3f(particle->color.r, particle->color.g, particle->color.b);
@@ -142,16 +169,25 @@ public:
 			//cout << "Position: " << (int)particle.position.x << "," << (int)particle.position.y << "\tVelocity: " << (int)particle.velocity.y << endl;
 
 			particle->life -= deltaTime;
+			
 
 			if (particle->life <= 0.0f) //particle's life span is over
 			{
 				if (particle->getMass() > 1) //detonate it and divide mass
 				{
-					gravityForceGenerator.DeRegister(particle); //De-Register particle
 					detonateParticleAndSpawnNewOnes(particle);  //create new particles from detonating one
+					DeRegisterParticle(particle); //De-Register particle
+					particle->setMass(1.0f); //prevent further detonations while fading-out effect
+					particle->velocity = glm::vec3(0); //necessary because of mass reduction (skyrocketing otherwise)
+					particle->accumForce = glm::vec3(0);
 				}
 
-				particlesToDelete.push_back(particle->uniqueID);
+				particle->color = particle->color * 0.97f; //fade out effect
+
+				if (particle->life <= -1.0f) //after 1s fade-out, delete the particle
+				{
+					particlesToDelete.push_back(particle->uniqueID);
+				}
 			}
 		}
 		glEnd();
@@ -191,8 +227,7 @@ public:
 			particle->setMass(mass);
 			particle->life = life;
 			particle->color = childColor;
-			_particles.insert(Particle_Pair(particle->uniqueID, particle));
-			gravityForceGenerator.Register(_particles.find(particle->uniqueID)->second);
+			registerParticle(particle);
 		}
 	}
 
