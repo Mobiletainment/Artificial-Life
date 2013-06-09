@@ -10,7 +10,7 @@ struct Particle
 	ParticleID uniqueID; //unique identifier for the particle
 	glm::vec3 position; //the particle's current position
 	glm::vec3 velocity; //current velocity	
-	glm::vec3 acceleration; //current Acceleration
+	//glm::vec3 acceleration; //current Acceleration
 	glm::vec3 accumForce; //accumulated force
 	glm::vec3 color; //make it colorful
 	
@@ -40,11 +40,11 @@ struct Particle
 	{
 		position += velocity * dt; //Update position: s = s + ds -> ds = v * dt
 		
-		acceleration += accumForce * invMass; // a = F * (1/m) -> a = F * m^-1
+		glm::vec3 acceleration = accumForce * invMass; // a = F * (1/m) -> a = F * m^-1
 
 		velocity = acceleration * dt; //a = v/t --> v = a*t
 
-		accumForce = glm::vec3(0); //reset applied forces
+		//accumForce = glm::vec3(0); //reset applied forces
 	}
 
 private:

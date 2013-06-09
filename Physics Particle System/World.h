@@ -13,7 +13,7 @@
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
-const int PARTICLES_COUNT = 1;
+const int PARTICLES_COUNT = 8;
 #define GRAVITY -10;
 
 //the World
@@ -80,8 +80,8 @@ public:
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
 
-			 particle->position = glm::vec3(getRandomNumber(50, width-50), 0, 0);
-			 particle->accumForce = glm::vec3(0.0f, 1.0f, 0.0f) * (float)getRandomNumber(25000,30000);
+			 particle->position = glm::vec3(getRandomNumber(50, width-50), 0.1, 0);
+			 particle->accumForce = glm::vec3(0.0f, 1.0f, 0.0f) * (float)getRandomNumber(30000,35000);
 			 particle->setMass(4);
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
@@ -105,8 +105,8 @@ public:
 
 	void updateAndRender(float deltaTime)
 	{
-
 		//calculate and apply forces
+		
 		for (fit it = _forceGenerators.begin(); it != _forceGenerators.end(); ++it)
 		{
 			(*it)->Update(deltaTime);
@@ -124,14 +124,17 @@ public:
 			Particle *particle = it->second;
 			particle->integrate(deltaTime);
 
-			if (particle->position.y < 0)
+			if (particle->position.y <= 0) //Bump on floor, reflect
+			{
 				particle->position.y = 0;
+				particle->accumForce = particle->accumForce * 1.0f; //invert forces
+			}
 
 			glColor3f(particle->color.r, particle->color.g, particle->color.b);
 
 			int radius = particle->getMass();
 
-			for(int y=-radius; y<=radius; y++)
+			for(int y=-radius; y<=radius; y++) //draw circle for particles
 				for(int x=-radius; x<=radius; x++)
 					if(x*x+y*y <= radius*radius)
 						glVertex3f(particle->position.x+x, particle->position.y+y+radius, 0.0f);
@@ -144,8 +147,8 @@ public:
 			{
 				if (particle->getMass() > 1) //detonate it and divide mass
 				{
-					gravityForceGenerator.DeRegister(particle);
-					detonateParticleAndSpawnNewOnes(particle);
+					gravityForceGenerator.DeRegister(particle); //De-Register particle
+					detonateParticleAndSpawnNewOnes(particle);  //create new particles from detonating one
 				}
 
 				particlesToDelete.push_back(particle->uniqueID);
@@ -161,7 +164,7 @@ public:
 		}
 
 		//cout << "Particles: " << uniqueIDIncrementor << endl;
-
+		
 	}
 
 	inline void detonateParticleAndSpawnNewOnes(Particle *parent)
@@ -169,19 +172,20 @@ public:
 		int mass = parent->getMass() / 2;
 		glm::vec3 childColor = parent->color + 0.15f;
 		int life = mass > 1 ? mass * 1.5 : getRandomNumber(5, 20);
-		int newParticleCount = 30 * mass;
+		int newParticleCount = 20 * mass;
 
 		glm::vec3 forceDirection(1.0f, 0.0f, 0.0f);
 		glm::vec3 normalDirection(0.0, 0.0f, 1.0f);
 		float currentRotation = 0.0f;
 		float rotationStep = 360.0f / newParticleCount;
+		float force = 3000.0f * mass;
 
 		for (int i = 0; i < newParticleCount; ++i)
 		{
 			Particle *particle = new Particle(uniqueIDIncrementor++);
 			particle->position = parent->position;
 			
-			particle->accumForce = glm::rotate(forceDirection, currentRotation, normalDirection) * 1500.0f;
+			particle->accumForce = glm::rotate(forceDirection, currentRotation, normalDirection) * force;
 			currentRotation += rotationStep;
 
 			particle->setMass(mass);
