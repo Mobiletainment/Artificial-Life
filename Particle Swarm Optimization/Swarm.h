@@ -19,8 +19,8 @@ const float C = 3.0f; //Koeffizient C beeinflusst die Motivation für Richtung zu
 
 //Die Unschärfefaktoren rs und rt sind Zufallswerte aus den Intervallen [0,s] und [u,t].
 const float S = 1.0;	 //für rs (beeinflust B)
-const float U = 0.9; //untere Schranke von rt (beeinflusst C)
-const float T = 1.1; //obere Schranke von rt
+const float U = 0.8; //untere Schranke von rt (beeinflusst C)
+const float T = 1.2; //obere Schranke von rt
 
 //the swarm
 class Swarm 
