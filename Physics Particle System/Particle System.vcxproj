@@ -85,7 +85,6 @@
   <ItemGroup>
     <ClInclude Include="GravityForceGenerator.h" />
     <ClInclude Include="ForceGenerator.h" />
-    <ClInclude Include="ForceManager.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Timer.h" />

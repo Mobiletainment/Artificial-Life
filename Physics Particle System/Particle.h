@@ -3,14 +3,25 @@
 #include <glm.hpp>
 #include <vector>
 
+typedef unsigned int ParticleID;
+
 struct Particle 
 {
+	ParticleID uniqueID; //unique identifier for the particle
 	glm::vec3 position; //the particle's current position
 	glm::vec3 velocity; //current velocity	
 	glm::vec3 acceleration; //current Acceleration
 	glm::vec3 accumForce; //accumulated force
 	glm::vec3 color; //make it colorful
 	
+	Particle()
+	{
+	}
+
+	Particle(ParticleID ID)
+	{
+		uniqueID = ID;
+	}
 	
 	float life;
 
@@ -25,7 +36,7 @@ struct Particle
 		return mass;
 	}
 
-	void integrate(float dt)
+	inline void integrate(float dt)
 	{
 		position += velocity * dt; //Update position: s = s + ds -> ds = v * dt
 		
