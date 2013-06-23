@@ -16,7 +16,7 @@
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
-const int PARTICLES_COUNT = 20;
+const int PARTICLES_COUNT = 80;
 glm::vec3 GRAVITY(0.0f, -10.0f, 0.0f);
 const float planeHeight = 250.0f;
 //the World
@@ -135,7 +135,7 @@ public:
 			
 			 particle->velocity = toCenter * speed;
 			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
-			 particle->setMass(getRandomNumber(1, 9));
+			 particle->setMass(getRandomNumber(1, 1));
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
 			 //particle->integrate(0.1f);
@@ -155,7 +155,7 @@ public:
 			
 			 particle->velocity = toCenter * speed;
 			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
-			 particle->setMass(getRandomNumber(1, 9));
+			 particle->setMass(getRandomNumber(1, 1));
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
 			 //particle->integrate(0.1f);
