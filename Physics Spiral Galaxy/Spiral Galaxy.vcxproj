@@ -91,6 +91,7 @@
     <ClInclude Include="GravityForceGenerator.h" />
     <ClInclude Include="ForceGenerator.h" />
     <ClInclude Include="Particle.h" />
+    <ClInclude Include="SpiralForceGenerator.h" />
     <ClInclude Include="UniversalGravitationForceGenerator.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Timer.h" />

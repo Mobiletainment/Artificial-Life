@@ -30,6 +30,8 @@ struct Particle
 	Particle(ParticleID ID)
 	{
 		uniqueID = ID;
+		velocity = glm::vec3(0);
+		accumForce = glm::vec3(0);
 	}
 	
 	float life;

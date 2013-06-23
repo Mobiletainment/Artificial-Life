@@ -11,11 +11,12 @@
 #include "Particle.h"
 #include "UniversalGravitationForceGenerator.h"
 #include "DampingForceGenerator.h"
+#include "SpiralForceGenerator.h"
 
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
-const int PARTICLES_COUNT = 1;
+const int PARTICLES_COUNT = 20;
 glm::vec3 GRAVITY(0.0f, -10.0f, 0.0f);
 const float planeHeight = 250.0f;
 //the World
@@ -32,6 +33,7 @@ private:
 	
 	UniversalGravitationForceGenerator universalGravitationForceGen;
 	DampingForceGenerator dampingForceGenerator;
+	SpiralForceGenerator spiralForceGenerator;
 
 	ParticleID uniqueIDIncrementor;
 
@@ -98,21 +100,19 @@ public:
 		srand((unsigned int)time(0));
 
 		//RegisterForceGenerator(&gravityForceGenerator);
-		RegisterForceGenerator(&universalGravitationForceGen);
-		dampingForceGenerator.damping = 0.1f;
-		dampingForceGenerator.center = _center;
-		RegisterForceGenerator(&dampingForceGenerator);
-		//gravityForceGenerator.gravity = GRAVITY;
-		//dragForceGenerator.k1 = 0.001;
-		//dragForceGenerator.k2 = 0;
-
-		//Auf die Haftreibung (StaticFrictionForceGenerator) wurde verzichtet, da unsere Partikel nicht wieder angestoßen werden
-		//staticFrictionForceGenerator.us = 0.7f;
-		//staticFrictionForceGenerator.gravity = GRAVITY;
-
 		
-		_particles.reserve(1000);
+		spiralForceGenerator.center = _center;
+		dampingForceGenerator.center = _center;
+		dampingForceGenerator.damping = 0.1f;
 
+		RegisterForceGenerator(&universalGravitationForceGen);
+	//	RegisterForceGenerator(&spiralForceGenerator);
+		
+		//RegisterForceGenerator(&dampingForceGenerator);
+
+
+		_particles.reserve(100);
+		float speed = 30.0f;
 		
 		Particle *particle = new Particle(uniqueIDIncrementor++);
 		particle->position = _center;
@@ -122,32 +122,45 @@ public:
 		particle->color = glm::vec3(1.0f);
 		registerParticle(particle);
 
-		for (int i = 0; i < PARTICLES_COUNT; ++i)
+		for (int i = 0; i < PARTICLES_COUNT / 2; ++i)
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
+			 particle->position = glm::vec3(getRandomNumber(_center.x - 140, _center.x - 100), getRandomNumber(_center.y - 140, _center.y - 150), 0);
 
-			 particle->position = glm::vec3(getRandomNumber(150, width-150), getRandomNumber(150, height - 150), 0);
-			 
-			
 			 glm::vec3 toCenter = _center - particle->position;
-			 //toCenter += 
-			 float speed = 0;
+			 toCenter.x = toCenter.x - 100;
+			 toCenter.y = toCenter.y + 200;
 			 
 			 toCenter = glm::normalize(toCenter);
-			 /*
-			 float temp = toCenter.x;
-			 toCenter.x = toCenter.y;
-			 toCenter.y = temp;
-			 */
-			 particle->velocity = toCenter;
+			
+			 particle->velocity = toCenter * speed;
 			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
-			 particle->setMass(getRandomNumber(1, 1));
+			 particle->setMass(getRandomNumber(1, 9));
 			 particle->life = getRandomNumber(5, 6);
 			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
 			 //particle->integrate(0.1f);
 			 registerParticle(particle);
 		}
 
+		for (int i = 0; i < PARTICLES_COUNT / 2; ++i)
+		{
+			 Particle *particle = new Particle(uniqueIDIncrementor++);
+			 particle->position = glm::vec3(getRandomNumber(_center.x + 140, _center.x + 100), getRandomNumber(_center.y + 140, _center.y + 150), 0);
+
+			 glm::vec3 toCenter = _center - particle->position;
+			 toCenter.x = toCenter.x + 100;
+			 toCenter.y = toCenter.y - 200;
+			 
+			 toCenter = glm::normalize(toCenter);
+			
+			 particle->velocity = toCenter * speed;
+			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
+			 particle->setMass(getRandomNumber(1, 9));
+			 particle->life = getRandomNumber(5, 6);
+			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
+			 //particle->integrate(0.1f);
+			 registerParticle(particle);
+		}
 		
 	}
 
@@ -165,12 +178,12 @@ public:
 	{
 		//calculate and apply forces
 		
-		_particles[0]->position = _center;
-
+		
 		for (fit it = _forceGenerators.begin(); it != _forceGenerators.end(); ++it)
 		{
 			(*it)->Update(deltaTime);
 		}
+		_particles[0]->accumForce = glm::vec3(0);
 
 
 		//Integrate and Render the points (in parallel)
@@ -187,6 +200,8 @@ public:
 				for(int x=-radius; x<=radius; x++)
 					if(x*x+y*y <= radius*radius)
 						glVertex3f(particle->position.x+x, particle->position.y+y, 0.0f);
+
+			particle->accumForce = glm::vec3(0);
 		}
 		glEnd();
 	}

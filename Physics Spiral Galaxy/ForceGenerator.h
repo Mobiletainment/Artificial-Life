@@ -34,7 +34,13 @@ public:
 		}
 	}
 
+	inline glm::vec3 normalize(glm::vec3 &vector)
+	{
+		if (glm::length(vector) > 0) //normalize the velocity for the specified direction
+			return glm::normalize(vector);
 
+		return vector;
+	}
 
 protected:
 	vector<Particle *> _particles;
