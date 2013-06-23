@@ -26,6 +26,9 @@
     <ClInclude Include="UniversalGravitationForceGenerator.h">
       <Filter>ForceGenerators</Filter>
     </ClInclude>
+    <ClInclude Include="DampingForceGenerator.h">
+      <Filter>ForceGenerators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ForceGenerators">
