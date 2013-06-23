@@ -16,16 +16,15 @@
 #include <hash_map>
 #include <gtx/rotate_vector.hpp> 
 
-const int PARTICLES_COUNT = 80;
+const int PARTICLES_COUNT = 120;
 glm::vec3 GRAVITY(0.0f, -10.0f, 0.0f);
 const float planeHeight = 250.0f;
 //the World
 class World 
 {
 private:
-	typedef std::hash_map<ParticleID, Particle*>::iterator pit; //less writing when iterating over particles
-	std::hash_map<ParticleID, Particle*> _particles;
-	typedef pair<ParticleID, Particle*> Particle_Pair;
+	typedef std::vector<Particle*>::iterator pit; //less writing when iterating over particles
+	std::vector<Particle*> _particles;
 	glm::vec3 _center;
 	float timePassed;
 	std::vector<ForceGenerator*> _forceGenerators;
@@ -73,7 +72,7 @@ public:
 
 	void registerParticle(Particle *particle)
 	{
-		_particles.insert(Particle_Pair(particle->uniqueID, particle));
+		_particles.push_back(particle);
 
 		for (ForceGenerator *forceGenerator : _forceGenerators)
 		{
@@ -122,7 +121,7 @@ public:
 		particle->color = glm::vec3(1.0f);
 		registerParticle(particle);
 
-		for (int i = 0; i < PARTICLES_COUNT / 2; ++i)
+		for (int i = 0; i < PARTICLES_COUNT / 4; ++i)
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
 			 particle->position = glm::vec3(getRandomNumber(_center.x - 140, _center.x - 100), getRandomNumber(_center.y - 140, _center.y - 150), 0);
@@ -142,7 +141,7 @@ public:
 			 registerParticle(particle);
 		}
 
-		for (int i = 0; i < PARTICLES_COUNT / 2; ++i)
+		for (int i = 0; i < PARTICLES_COUNT / 4; ++i)
 		{
 			 Particle *particle = new Particle(uniqueIDIncrementor++);
 			 particle->position = glm::vec3(getRandomNumber(_center.x + 140, _center.x + 100), getRandomNumber(_center.y + 140, _center.y + 150), 0);
@@ -161,7 +160,46 @@ public:
 			 //particle->integrate(0.1f);
 			 registerParticle(particle);
 		}
+
+		for (int i = 0; i < PARTICLES_COUNT / 4; ++i)
+		{
+			 Particle *particle = new Particle(uniqueIDIncrementor++);
+			 particle->position = glm::vec3(getRandomNumber(_center.x + 140, _center.x + 100), getRandomNumber(_center.y - 140, _center.y - 150), 0);
+
+			 glm::vec3 toCenter = _center - particle->position;
+			 toCenter.x = toCenter.x - 200;
+			 toCenter.y = toCenter.y - 140;
+			 
+			 toCenter = glm::normalize(toCenter);
+			
+			 particle->velocity = toCenter * speed;
+			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
+			 particle->setMass(getRandomNumber(1, 1));
+			 particle->life = getRandomNumber(5, 6);
+			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
+			 //particle->integrate(0.1f);
+			 registerParticle(particle);
+		}
 		
+		for (int i = 0; i < PARTICLES_COUNT / 4; ++i)
+		{
+			 Particle *particle = new Particle(uniqueIDIncrementor++);
+			 particle->position = glm::vec3(getRandomNumber(_center.x - 140, _center.x - 100), getRandomNumber(_center.y + 140, _center.y + 150), 0);
+
+			 glm::vec3 toCenter = _center - particle->position;
+			 toCenter.x = toCenter.x + 200;
+			 toCenter.y = toCenter.y + 140;
+			 
+			 toCenter = glm::normalize(toCenter);
+			
+			 particle->velocity = toCenter * speed;
+			 //particle->accumForce = glm::vec3(getRandomNumber(-2000, -500), getRandomNumber(-20000, -1000), 0);
+			 particle->setMass(getRandomNumber(1, 1));
+			 particle->life = getRandomNumber(5, 6);
+			 particle->color = glm::vec3(getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85),getRandomNumberFloat(0.2,0.85));
+			 //particle->integrate(0.1f);
+			 registerParticle(particle);
+		}
 	}
 
 	int getRandomNumber(int min, int max) 
@@ -188,20 +226,25 @@ public:
 
 		//Integrate and Render the points (in parallel)
 		glBegin(GL_POINTS);
-		for (pit it = _particles.begin(); it != _particles.end(); ++it)
+
+		//#pragma omp parallel
 		{
-			Particle *particle = it->second;
-			particle->integrate(deltaTime);
-			glColor3f(particle->color.r, particle->color.g, particle->color.b);
+			//#pragma omp for
+			for (int i = 0; i < _particles.size(); ++i)
+			{
+				Particle *particle = _particles[i];
+				particle->integrate(deltaTime);
+				glColor3f(particle->color.r, particle->color.g, particle->color.b);
 
-			int radius = particle->getSize();
+				int radius = particle->getSize();
 
-			for(int y=-radius; y<=radius; y++) //draw circle for particles
-				for(int x=-radius; x<=radius; x++)
-					if(x*x+y*y <= radius*radius)
-						glVertex3f(particle->position.x+x, particle->position.y+y, 0.0f);
+				for(int y=-radius; y<=radius; y++) //draw circle for particles
+					for(int x=-radius; x<=radius; x++)
+						if(x*x+y*y <= radius*radius)
+							glVertex3f(particle->position.x+x, particle->position.y+y, 0.0f);
 
-			particle->accumForce = glm::vec3(0);
+				particle->accumForce = glm::vec3(0);
+			}
 		}
 		glEnd();
 	}

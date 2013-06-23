@@ -27,17 +27,20 @@ public:
 				if (it != other)
 				{
 					glm::vec3 direction = (*other)->position - (*it)->position;
-					float distance = glm::length(direction);
-					float distanceSquared = distance * distance;
+					float distanceSquared = direction.x * direction.x + direction.y * direction.y;
 
 					if (distanceSquared > 10000.0f)
 						distanceSquared = 10000.0f;
 
-					direction = normalize(direction);
+					glm::vec3 attraction = glm::vec3(0);
+
+					if (distanceSquared > 0.0f)
+					{
+						direction = normalize(direction);
+						attraction = ((*it)->getMass() * G) * (*other)->getMass()  * direction / distanceSquared; //F = m * g
 					
-					glm::vec3 attraction = ((*it)->getMass() * G) * (*other)->getMass()  * direction / distanceSquared; //F = m * g
-					
-					(*it)->accumForce += attraction; //apply Newton's universal law of gravity
+						(*it)->accumForce += attraction; //apply Newton's universal law of gravity
+					}
 					//cout << (*it)->uniqueID << " -> " << (*other)->uniqueID << ": " << glm::length(attraction) << endl;
 					//++i;
 				}
